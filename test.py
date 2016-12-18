@@ -4,6 +4,7 @@ from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 import requests
 from PIL import Image
 # import random
+import pytesseract
 
 dcap = dict(DesiredCapabilities.PHANTOMJS)
 dcap["phantomjs.page.settings.userAgent"] = (
@@ -16,6 +17,8 @@ driver = webdriver.PhantomJS(
     port=0,
     desired_capabilities=dcap)
 url = "http://59.52.128.92:8000"
+login_url = url + "/Login/login"
+homepage = url+"/Login/index"
 headers = {
     "Accept":
     "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
@@ -32,9 +35,9 @@ login_data = {"userName": "baidujxtgb", "userPwd": "baidujxtgb"}
 driver.get(url)
 try:
     element = WebDriverWait(
-        driver, 10, 0.5).until(lambda x: x.find_element_by_id("ext-gen25").is_displayed())
+        driver, 10, 0.5).until(lambda x: x.find_element_by_id("imgCode").is_displayed())
 finally:
-    print(driver.find_element_by_id("ext-gen25").text)
+    print(driver.find_element_by_id("imgCode").get_attribute("title"))
     # print(driver.page_source)
     cookies = driver.get_cookies()
     print(cookies)
@@ -66,4 +69,15 @@ finally:
     print(box)
     captchaImg = screenshot.crop(box)
     captchaImg.save("captcha.png")
+    verifycode = input("验证码: ")
+    login_data["verifycode"] = verifycode
+    requests.post(login_url, headers, login_data)
+    driver.get(homepage)
+    print(driver.page_source)
+    try:
+        element = WebDriverWait(
+            driver, 10, 0.5).until(
+                lambda x: x.find_element_by_id("ext-gen62").is_displayed())
+    finally:
+        print(driver.find_element_by_id("ext-gen62").text)
     driver.close()
